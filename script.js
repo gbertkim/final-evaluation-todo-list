@@ -1,5 +1,26 @@
-const form = document.querySelector('.form');
 
+// GLOBAL VARIABLES
+const form = document.querySelector('.form');
+const incompleteList = document.querySelector('.incomplete')
+const completedList = document.querySelector('.completed')
+
+// FORM EVENT LISTENER
+form.addEventListener('submit', function(event) {
+    event.preventDefault()
+    let searchVal = document.querySelector('.form--input').value;
+    postTask(searchVal);
+})
+
+// GET POST PATCH DELETE
+const getList = async () => {
+    try {
+        const todos = await fetch('http://localhost:3000/todos')
+        const todosJson = await todos.json();
+        return todosJson
+    } catch (e) {
+        console.log(e)
+    }
+}
 
 const postTask = (searchVal) => {
     fetch('http://localhost:3000/todos', {
@@ -13,7 +34,6 @@ const postTask = (searchVal) => {
             completed: false
         })
     })
-    form.reset();
 }
 
 const deleteTask = (id) => {
@@ -22,19 +42,33 @@ const deleteTask = (id) => {
     })
 }
 
-const editTaskTitle = (id, h2Element, titleListenerCb, editElement, editListenerCb)=> {
+const editTask = (id, newTitle) => {
+    fetch(`http://localhost:3000/todos/${id}`, {     
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },      
+        method: 'PATCH',
+        body: JSON.stringify({
+            title: newTitle
+        })
+    })
+}
+
+const editTaskTitle = (id, h2Element, titleListenerCb, editElement, editListenerCb, title)=> {
     let editInput = document.createElement('input')
     editInput.setAttribute('type','text')
     editInput.setAttribute('for','editTask')
     editInput.setAttribute('id','editTask')
-    editInput.required = true;
+    editInput.setAttribute('value', title)
     h2Element.append(editInput)
-    // console.log(taskTitle)
     h2Element.removeEventListener('click', titleListenerCb)
     editElement.removeEventListener('click', editListenerCb)
-    
-
-    
+    editElement.addEventListener('click', () => {
+        let inputValue = editInput.value
+        console.log('id', editInput.value)
+        editTask(id, inputValue)
+    })
 }
 
 const editCompleted = (id,completedTask)=> {
@@ -49,21 +83,13 @@ const editCompleted = (id,completedTask)=> {
         })
     })
 }
-form.addEventListener('submit', (e) => {
-    e.preventDefault()
-    let searchVal = document.querySelector('.form--input').value;
-    postTask(searchVal);
-})
 
-const incompleteList = document.querySelector('.incomplete')
-const completedList = document.querySelector('.completed')
-
+// RENDER PAGE
 const renderList = (todoList) => {
     todoList.forEach((task)=>{
         let taskCompleted = task.completed
         let li = document.createElement('li')
         li.classList.add('lists--li')
-        // li.setAttribute('data-id', `${task.id}`)
 
         let h2 = document.createElement('h2')
         h2.classList.add('lists--li--h2')
@@ -86,7 +112,7 @@ const renderList = (todoList) => {
 
         function editListenerFunc(e){
             e.preventDefault()
-            editTaskTitle(task.id, h2, h2ListenerFunc, editButton, editListenerFunc)
+            editTaskTitle(task.id, h2, h2ListenerFunc, editButton, editListenerFunc, task.title)
         }
         editButton.addEventListener('click', editListenerFunc)
 
@@ -99,21 +125,17 @@ const renderList = (todoList) => {
         })
         buttonWrapper.append(editButton)
         buttonWrapper.append(deleteButton)
+
         li.append(h2)
         li.append(buttonWrapper)
         taskCompleted === false ? incompleteList.append(li) : completedList.append(li)
     })
-}
-
-const getList = async () => {
-    try {
-        const todos = await fetch('http://localhost:3000/todos')
-        const todosJson = await todos.json();
-        return todosJson
-    } catch (e) {
-
+    if (incompleteList.childNodes.length === 0) {
+        incompleteList.innerHTML = `<span class='noActiveList'>no active task</span>`
     }
 }
+
+// INITIALIZE
 const init = () => {
     const todoList = getList()
     todoList.then((data)=> {
@@ -121,3 +143,4 @@ const init = () => {
     })
 }
 init();
+

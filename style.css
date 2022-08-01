@@ -20,7 +20,6 @@ body {
 
 main {
     max-width: 800px;
-    border: 1px solid black;
     margin-left: auto;
     margin-right: auto;
     padding: 2rem;
@@ -128,4 +127,21 @@ button:hover, button:focus,
     padding-left: 1rem;
     font-size: 1.5rem;
     font-weight: lighter;
+}
+.noActiveList {
+    display: table;
+    margin: 0 auto;
+    color: grey;
+    font-size: 1.5rem;
+
+}
+@media only screen and (max-width: 600px) {
+    .lists--li {
+        grid-template-columns: 1fr;
+    }
+    .lists--li--wrapper {
+        margin-top: 2rem;
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
