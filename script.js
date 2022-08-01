@@ -4,11 +4,14 @@ const form = document.querySelector('.form');
 const incompleteList = document.querySelector('.incomplete')
 const completedList = document.querySelector('.completed')
 
+
 // FORM EVENT LISTENER
-form.addEventListener('submit', function(event) {
-    event.preventDefault()
+form.addEventListener('submit', (e) => {
+    e.preventDefault()    
     let searchVal = document.querySelector('.form--input').value;
     postTask(searchVal);
+    form.reset();
+    init()
 })
 
 // GET POST PATCH DELETE
@@ -39,6 +42,8 @@ const postTask = (searchVal) => {
 const deleteTask = (id) => {
     fetch(`http://localhost:3000/todos/${id}`, {     
         method: 'DELETE',
+    }).then((res)=>{
+        init()
     })
 }
 
@@ -52,6 +57,8 @@ const editTask = (id, newTitle) => {
         body: JSON.stringify({
             title: newTitle
         })
+    }).then((res)=>{
+        init()
     })
 }
 
@@ -81,11 +88,15 @@ const editCompleted = (id,completedTask)=> {
         body: JSON.stringify({
             completed: completedTask
         })
+    }).then((res)=>{
+        init()
     })
 }
 
 // RENDER PAGE
 const renderList = (todoList) => {
+    incompleteList.innerHTML = ``
+    completedList.innerHTML = ``
     todoList.forEach((task)=>{
         let taskCompleted = task.completed
         let li = document.createElement('li')
@@ -143,4 +154,5 @@ const init = () => {
     })
 }
 init();
+
 
