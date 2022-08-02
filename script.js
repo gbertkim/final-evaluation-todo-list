@@ -3,6 +3,8 @@
 const form = document.querySelector('.form');
 const incompleteList = document.querySelector('.incomplete')
 const completedList = document.querySelector('.completed')
+const BASE_URL = 'http://localhost:3000'
+const PATH = 'todos'
 
 //State
 class State {
@@ -34,7 +36,7 @@ const addFormListener = () => {
 // GET
 const getList = async () => {
     try {
-        const todos = await fetch('http://localhost:3000/todos')
+        const todos = await fetch([BASE_URL, PATH].join('/'))
         const todosJson = await todos.json();
         state.todos = todosJson
     } catch (e) {
@@ -44,7 +46,7 @@ const getList = async () => {
 // POST
 const postTask = async (searchVal) => {
     try {
-        const response = await fetch('http://localhost:3000/todos', {
+        const response = await fetch([BASE_URL, PATH].join('/'), {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -63,7 +65,7 @@ const postTask = async (searchVal) => {
 // DELETE
 const deleteTask = async (id) => {
     try {
-        let response = fetch(`http://localhost:3000/todos/${id}`, {     
+        let response = fetch([BASE_URL, PATH, id].join('/'), {     
             method: 'DELETE',
         })
         state.todos = state.todos.filter((task) => {
@@ -76,7 +78,7 @@ const deleteTask = async (id) => {
 // PATCH
 const patchTask = async (id, newTitle) => {
     try {
-        let response = fetch(`http://localhost:3000/todos/${id}`, {     
+        let response = fetch([BASE_URL, PATH, id].join('/'), {     
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -97,7 +99,7 @@ const patchTask = async (id, newTitle) => {
 // PATCH Completed
 const editCompleted = async (id,completedTask)=> {
     try {
-        let response = fetch(`http://localhost:3000/todos/${id}`, {     
+        let response = fetch([BASE_URL, PATH, id].join('/'), {     
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -115,7 +117,8 @@ const editCompleted = async (id,completedTask)=> {
         console.log(e)
     }
 }
-// EDIT FUNCTION 
+
+// EDIT FUNCTIONS
 const createEditInput = (title) => {
     let editInput = document.createElement('input')
     editInput.setAttribute('type','text')
@@ -138,7 +141,7 @@ const editFirstClickFunc = (id, h2Element, titleListenerCb, editElement, editLis
     })
 }
 
-// RENDER PAGE
+// RENDER ELEMENTS
 const clearLists = () => {
     incompleteList.innerHTML = ``
     completedList.innerHTML = ``
@@ -148,13 +151,12 @@ const createListEl = () => {
     li.classList.add('lists--li')
     return li
 }
-const createTitleElwithEvent = (task, taskCompleted, titleListenerFunc) => {
+const createTitleElwithEvent = (task, taskCompleted) => {
     let h2 = document.createElement('h2')
     h2.classList.add('lists--li--h2')
     h2.setAttribute('data-id',`${task.id}`)
     taskCompleted === true ? h2.classList.add('strikeThrough') : h2.classList.remove('strikeThrough')
     h2.textContent = task.title
-    h2.addEventListener('click', titleListenerFunc)
     return h2
 }
 const createButtonWrapper = () => {
@@ -162,29 +164,39 @@ const createButtonWrapper = () => {
     container.classList.add('lists--li--wrapper')
     return container
 }
-const createEditWithEvent = (id, h2, titleListenerFunc, title) => {
+const createEditButton = () => {
     let button = document.createElement('button')
     button.classList.add('editButton')
-    // button.textContent = 'Edit'
     button.innerHTML = `<svg focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="EditIcon" aria-label="fontSize small"><path fill="#ffffff" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path></svg>`
-    function editListenerFunc(e){
-        e.preventDefault()
-        editFirstClickFunc(id, h2, titleListenerFunc, button, editListenerFunc, title)
-    }
-    button.addEventListener('click', editListenerFunc)
     return button
 }
 const createDeleteWithEvent = (id) => {
     let deleteButton = document.createElement('button')
     deleteButton.classList.add('deleteButton')
-    // deleteButton.textContent = 'Delete'
     deleteButton.innerHTML = `<svg focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="DeleteIcon" aria-label="fontSize small"><path fill="#ffffff" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path></svg>`
     deleteButton.addEventListener('click', (e) => {
-        e.preventDefault()
         deleteTask(id)
     })
     return deleteButton
 }
+
+// EVENT HANDLERS
+const setEditEvent = (id, h2, titleListenerFunc, title, button) => {
+    function editListenerFunc(e){
+        editFirstClickFunc(id, h2, titleListenerFunc, button, editListenerFunc, title)
+    }
+    button.addEventListener('click', editListenerFunc)
+}
+const setTitleEvent = (title, taskCompleted, task) => {
+    function titleListenerFunc (e){
+        taskCompleted = !taskCompleted
+        editCompleted(task.id, taskCompleted)
+    }
+    title.addEventListener('click', titleListenerFunc)
+    return titleListenerFunc
+}
+
+// APPEND ELEMENTS 
 const appendElements = (editButton, deleteButton, title, buttonWrapper, li, taskCompleted) => {
     buttonWrapper.append(editButton)
     buttonWrapper.append(deleteButton)
@@ -199,14 +211,11 @@ const renderList = (todoList) => {
     todoList.forEach((task)=>{
         let taskCompleted = task.completed
         let li = createListEl(task)
-        function titleListenerFunc (e){
-            e.preventDefault()
-            taskCompleted = !taskCompleted
-            editCompleted(task.id, taskCompleted)
-        }
-        let title = createTitleElwithEvent(task, taskCompleted, titleListenerFunc)
+        let title = createTitleElwithEvent(task, taskCompleted)
+        let titleListenerFunc = setTitleEvent(title, taskCompleted, task)
         let buttonWrapper = createButtonWrapper()
-        let editButton = createEditWithEvent(task.id, title, titleListenerFunc, task.title)
+        let editButton = createEditButton()
+        setEditEvent(task.id, title, titleListenerFunc, task.title, editButton);
         let deleteButton = createDeleteWithEvent(task.id)
         appendElements(editButton, deleteButton, title, buttonWrapper, li, taskCompleted)
     })
