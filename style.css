@@ -94,6 +94,10 @@ button:hover, button:focus,
     margin-left: .5rem;
     color: white;
 }
+svg {
+    height: 30px;
+    width: 30px;
+}
 .editButton {
     background-color: var(--color-blue);
 }
