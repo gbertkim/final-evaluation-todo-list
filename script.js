@@ -5,6 +5,10 @@ const incompleteList = document.querySelector('.incomplete')
 const completedList = document.querySelector('.completed')
 const BASE_URL = 'http://localhost:3000'
 const PATH = 'todos'
+// 
+
+// 
+
 
 //State
 class State {
@@ -21,6 +25,44 @@ class State {
     }
 }
 let state = new State()
+
+
+const setEventForIncompleteButton = () => {
+    const incompleteButton = document.querySelector('.incompleteFilterButton')
+    let toggle = 0
+    incompleteButton.addEventListener('click', () => {
+        if (!toggle) {
+            completedList.classList.add('hidden')
+            toggle = !toggle
+        }  else {
+            completedList.classList.remove('hidden')
+            toggle = !toggle
+        }
+    })
+}
+
+
+function debounce(func, timeout = 300){
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { func.apply(this, args); }, timeout);
+    };
+  }
+
+const setEventForFindInput = () => {
+    const findTaskByLetters = document.querySelector('#find')
+        findTaskByLetters.addEventListener('input', debounce((e) => {
+            state.todos.forEach(task => {
+                task.title.toLowerCase().includes(e.target.value.toLowerCase()) ? task.visible = 'show' : task.visible = 'hide' 
+            })
+            state.todos = state.todos
+        }))
+}
+
+
+// Debouncing / 
+
 
 // FORM EVENT LISTENER
 const addFormListener = () => {
@@ -211,6 +253,11 @@ const renderList = (todoList) => {
     todoList.forEach((task)=>{
         let taskCompleted = task.completed
         let li = createListEl(task)
+        if(task.visible === 'show'){
+            li.classList.remove('hidden')
+        } else if (task.visible === 'hide'){
+            li.classList.add('hidden')
+        }
         let title = createTitleElwithEvent(task, taskCompleted)
         let titleListenerFunc = setTitleEvent(title, taskCompleted, task)
         let buttonWrapper = createButtonWrapper()
@@ -226,7 +273,9 @@ const renderList = (todoList) => {
 
 // INITIALIZE
 const init = () => {
-    addFormListener();
+    addFormListener()
+    setEventForIncompleteButton()
+    setEventForFindInput()
     getList()
 }
 init();
