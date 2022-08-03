@@ -26,38 +26,44 @@ class State {
 }
 let state = new State()
 
-
+// NEW LOGIC FOR EXAM
 const setEventForIncompleteButton = () => {
     const incompleteButton = document.querySelector('.incompleteFilterButton')
     let toggle = 0
     incompleteButton.addEventListener('click', () => {
         if (!toggle) {
-            completedList.classList.add('hidden')
+            state.todos.forEach(task => {
+                if (task.completed ) {
+                    task.visible = 'hide'
+                }
+            })
             toggle = !toggle
-        }  else {
-            completedList.classList.remove('hidden')
+        } else {
+            state.todos.forEach(task => {
+                if (task.completed ) {
+                    task.visible = 'show'
+                }
+            })
             toggle = !toggle
         }
+        state.todos = state.todos
     })
 }
-
-
 function debounce(func, timeout = 300){
     let timer;
     return (...args) => {
       clearTimeout(timer);
       timer = setTimeout(() => { func.apply(this, args); }, timeout);
     };
-  }
-
+}
 const setEventForFindInput = () => {
     const findTaskByLetters = document.querySelector('#find')
-        findTaskByLetters.addEventListener('input', debounce((e) => {
-            state.todos.forEach(task => {
-                task.title.toLowerCase().includes(e.target.value.toLowerCase()) ? task.visible = 'show' : task.visible = 'hide' 
-            })
-            state.todos = state.todos
-        }))
+    findTaskByLetters.addEventListener('input', debounce((e) => {
+        state.todos.forEach(task => {
+            task.title.toLowerCase().includes(e.target.value.toLowerCase()) ? task.visible = 'show' : task.visible = 'hide' 
+        })
+        state.todos = state.todos
+    }))
 }
 
 
